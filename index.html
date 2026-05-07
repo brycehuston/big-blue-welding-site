@@ -1,391 +1,859 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portable Welder Calgary | Big Blue Portable Welding</title>
-  <meta name="description" content="Big Blue Portable Welding (1985) Ltd. provides portable welding, mobile welding, pressure pipe welding, structural welding, pipe repair, custom fabrication, and related welding services in Calgary and surrounding areas since 1985.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portable Welder Calgary | Big Blue Portable Welding</title>
+    <meta name="description"
+        content="Big Blue Portable Welding (1985) Ltd. provides portable welding, mobile welding, pressure pipe welding, structural welding, pipe repair, custom fabrication, and related welding services in Calgary and surrounding areas since 1985.">
+    <link rel="icon" type="image/png" href="bigblueweldingfavicon.png">
+    <link rel="apple-touch-icon" href="bigblueweldingfavicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        .service-map-card {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            border-radius: 4px;
+            overflow: hidden;
+            background: #0b0d10;
+        }
+
+        .map-container {
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .leaflet-container {
+            background: #0b0d10 !important;
+        }
+
+        .service-map-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.95);
+            z-index: 999;
+        }
+
+        .leaflet-control-attribution {
+            display: none !important;
+        }
+
+        .leaflet-control-zoom {
+            border: none !important;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5) !important;
+            margin-top: 20px !important;
+            margin-right: 20px !important;
+        }
+
+        .leaflet-control-zoom a {
+            background: #1a1e24 !important;
+            color: #E06A3B !important;
+            border-bottom: 1px solid #2a3038 !important;
+        }
+
+        .service-map-frame {
+            position: relative;
+            padding: 15px;
+            background: #12151a;
+            border: 1px solid rgba(74, 144, 226, 0.15);
+            border-radius: 8px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        .corner-bracket {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            border: 2px solid #B54232;
+            opacity: 0.6;
+            z-index: 10;
+        }
+
+        .top-left {
+            top: -1px;
+            left: -1px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .top-right {
+            top: -1px;
+            right: -1px;
+            border-left: none;
+            border-bottom: none;
+        }
+
+        .bottom-left {
+            bottom: -1px;
+            left: -1px;
+            border-right: none;
+            border-top: none;
+        }
+
+        .bottom-right {
+            bottom: -1px;
+            right: -1px;
+            border-left: none;
+            border-top: none;
+        }
+
+        .pin-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hub-dot {
+            width: 14px;
+            height: 14px;
+            background-color: #B54232;
+            border-radius: 50%;
+            box-shadow: 0 0 15px 5px rgba(181, 66, 50, 0.58);
+            animation: pulse-hub-plasma 3s infinite cubic-bezier(0.22, 1, 0.36, 1);
+            transition: opacity 4s ease-in-out;
+        }
+
+        .beacon-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: opacity 4s ease-in-out, transform 4s ease-in-out;
+        }
+
+        .beacon-dot.visible {
+            opacity: 1;
+            transform: scale(1);
+            animation: soft-breathe 4s infinite alternate ease-in-out;
+        }
+
+        @keyframes soft-breathe {
+            0% {
+                background-color: #7C241F;
+                box-shadow: 0 0 8px 1px rgba(181, 66, 50, 0.38);
+            }
+
+            100% {
+                background-color: #E06A3B;
+                box-shadow: 0 0 14px 4px rgba(224, 106, 59, 0.72);
+            }
+        }
+
+        @keyframes pulse-hub-plasma {
+            0% {
+                transform: scale(0.9);
+                box-shadow: 0 0 10px 2px rgba(181, 66, 50, 0.38);
+            }
+
+            50% {
+                transform: scale(1.2);
+                box-shadow: 0 0 25px 12px rgba(224, 106, 59, 0.72);
+            }
+
+            100% {
+                transform: scale(0.9);
+                box-shadow: 0 0 10px 2px rgba(181, 66, 50, 0.38);
+            }
+        }
+
+        .map-label {
+            position: absolute;
+            background: rgba(18, 21, 26, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e0e6ed;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 3px 6px;
+            border-radius: 3px;
+            opacity: 0;
+            transition: opacity 4s ease-in-out;
+            white-space: nowrap;
+        }
+
+        .map-label.visible {
+            opacity: 1;
+        }
+
+        .pos-right {
+            left: 18px;
+            top: -8px;
+        }
+
+        .pos-left {
+            right: 18px;
+            top: -8px;
+        }
+
+        .pos-top {
+            bottom: 12px;
+            left: -50%;
+            transform: translateX(-20%);
+        }
+
+        .pos-bottom {
+            top: 12px;
+            left: -50%;
+            transform: translateX(-20%);
+        }
+
+        .calgary-label {
+            top: 22px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        @media (max-width: 992px) {
+            .service-map-card {
+                height: 400px;
+            }
+        }
+    </style>
+    <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Big Blue Portable Welding (1985) Ltd.",
+    "url": "https://www.bigbluewelding.com/",
+    "telephone": "+1-403-295-0909",
+    "faxNumber": "+1-403-295-0989",
+    "email": "bigbluewelding@gmail.com",
+    "description": "Big Blue Portable Welding (1985) Ltd. provides portable welding, mobile welding, pressure pipe welding, structural welding, pipe repair, gas piping, water piping, and custom fabrication services in Calgary and surrounding areas.",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "5-2815 17 St SW",
+      "addressLocality": "Calgary",
+      "addressRegion": "AB",
+      "postalCode": "T2T 6T5",
+      "addressCountry": "CA"
+    },
+    "areaServed": [
+      {
+        "@type": "City",
+        "name": "Calgary"
+      },
+      {
+        "@type": "AdministrativeArea",
+        "name": "Calgary and surrounding area"
+      }
+    ],
+    "openingHoursSpecification": [
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday"
+        ],
+        "opens": "07:00",
+        "closes": "17:00"
+      }
+    ],
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "Welding Services",
+      "itemListElement": [
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Portable Welding"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Mobile Welding"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Pressure Pipe Welding"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Structural Welding"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Pipe Repairing"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Gas Piping"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Water Piping"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Commercial Piping"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Steam Piping"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Custom Fabrication"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Architectural Metalwork"
+          }
+        }
+      ]
+    }
+  }
+  </script>
+    <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-  <header class="site-header" data-header>
-    <a class="brand" href="#top" aria-label="Big Blue Portable Welding home">
-      <span class="brand-mark">BB</span>
-      <span>
-        <strong>Big Blue</strong>
-        <small>Portable Welding (1985) Ltd.</small>
-      </span>
-    </a>
+    <header class="site-header" data-header>
+        <a class="brand" href="#top" aria-label="Big Blue Portable Welding home">
+            <span class="brand-mark" aria-hidden="true">
+                <img src="bigblueweldinglogo.png" alt="" width="120" height="120">
+            </span>
+            <span>
+                <strong>Big Blue</strong>
+                <small>Portable Welding (1985) Ltd.</small>
+            </span>
+        </a>
 
-    <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="site-nav" data-nav-toggle>
-      <span></span>
-      <span></span>
-      <span></span>
-    </button>
+        <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false"
+            aria-controls="site-nav" data-nav-toggle>
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
 
-    <nav class="site-nav" id="site-nav" data-nav>
-      <a href="#services">Services</a>
-      <a href="#equipment">Equipment</a>
-      <a href="#projects">Common Jobs</a>
-      <a href="#area">Service Area</a>
-      <a href="#quote">Quote</a>
-    </nav>
+        <nav class="site-nav" id="site-nav" data-nav>
+            <a href="#services">Services</a>
+            <a href="#equipment">Equipment</a>
+            <a href="#projects">Common Jobs</a>
+            <a href="#area">Service Area</a>
+            <a href="#quote">Quote</a>
+        </nav>
 
-    <a class="header-phone" href="tel:4032950909">403-295-0909</a>
-  </header>
+        <a class="header-phone" href="tel:4032950909">403-295-0909</a>
+    </header>
 
-  <div class="ambient-spark-field" data-spark-field aria-hidden="true"></div>
+    <div class="ambient-spark-field" data-spark-field aria-hidden="true"></div>
 
-  <main id="top">
-    <section class="hero section-grid">
-      <div class="hero-bg" aria-hidden="true">
-        <span class="hero-bg-grid"></span>
-        <span class="hero-bg-diagonals"></span>
-        <span class="hero-bg-glow hero-bg-glow-one"></span>
-        <span class="hero-bg-glow hero-bg-glow-two"></span>
-        <span class="hero-bg-sweep"></span>
-      </div>
-      <div class="hero-copy reveal reveal-left hero-load">
-        <p class="eyebrow">Field welding in Calgary</p>
-        <h1>PORTABLE WELDING IN CALGARY</h1>
-        <p class="hero-text">Big Blue Portable Welding (1985) Ltd. provides mobile welding, pressure pipe welding, structural welding, pipe repair, and custom fabrication across Calgary and surrounding areas.</p>
-
-        <div class="trust-chips reveal-stagger" aria-label="Service highlights">
-          <span>Since 1985</span>
-          <span>Calgary &amp; Area</span>
-          <span>Mobile Welding</span>
-          <span>24-Hour Answering Service</span>
-        </div>
-
-        <div class="hero-actions reveal-stagger">
-          <a class="btn btn-primary" href="tel:4032950909">Call 403-295-0909</a>
-          <a class="btn btn-secondary" href="#quote">Request a Quote</a>
-        </div>
-      </div>
-
-      <div class="hero-media reveal reveal-right hero-load">
-        <div class="industrial-frame hero-frame trace-border">
-          <div class="frame-topline">
-            <span>Mobile welding unit</span>
-            <span>Ready for dispatch</span>
-          </div>
-          <div class="placeholder-visual hero-visual-system" role="img" aria-label="Industrial welding project placeholder">
-            <span class="tech-line tech-line-one"></span>
-            <span class="tech-line tech-line-two"></span>
-            <span class="weld-glow"></span>
-            <span class="arc-beam"></span>
-            <span class="spark spark-one"></span>
-            <span class="spark spark-two"></span>
-            <span class="spark spark-three"></span>
-            <div class="status-card status-card-primary">
-              <small>Mobile Welding Unit</small>
-              <strong>Ready for Dispatch</strong>
+    <main id="top">
+        <section class="hero section-grid">
+            <div class="hero-bg" aria-hidden="true">
+                <span class="hero-bg-grid"></span>
+                <span class="hero-bg-diagonals"></span>
+                <span class="hero-bg-glow hero-bg-glow-one"></span>
+                <span class="hero-bg-glow hero-bg-glow-two"></span>
+                <span class="hero-bg-sweep"></span>
             </div>
-            <div class="status-card status-card-secondary">
-              <small>Service Area</small>
-              <strong>Calgary &amp; Area</strong>
+            <div class="hero-copy reveal reveal-left hero-load">
+                <p class="eyebrow">Field welding in Calgary</p>
+                <h1>PORTABLE WELDING IN CALGARY</h1>
+                <p class="hero-text">Big Blue Portable Welding (1985) Ltd. provides mobile welding, pressure pipe
+                    welding, structural welding, pipe repair, and custom fabrication across Calgary and surrounding
+                    areas.</p>
+
+                <div class="trust-chips reveal-stagger" aria-label="Service highlights">
+                    <span>Since 1985</span>
+                    <span>Calgary &amp; Area</span>
+                    <span>Mobile Welding</span>
+                    <span>24-Hour Answering Service</span>
+                </div>
+
+                <div class="hero-actions reveal-stagger">
+                    <a class="btn btn-primary" href="tel:4032950909">Call 403-295-0909</a>
+                    <a class="btn btn-secondary" href="#quote">Request a Quote</a>
+                </div>
             </div>
-            <div class="status-card status-card-tertiary">
-              <small>Established</small>
-              <strong>Since 1985</strong>
+
+            <div class="hero-media reveal reveal-right hero-load">
+                <div class="industrial-frame hero-frame trace-border">
+                    <div class="frame-topline">
+                        <span>Mobile welding unit</span>
+                        <span>Ready for dispatch</span>
+                    </div>
+                    <div class="placeholder-visual hero-visual-system" role="img"
+                        aria-label="Industrial welding project placeholder">
+                        <span class="tech-line tech-line-one"></span>
+                        <span class="tech-line tech-line-two"></span>
+                        <span class="weld-glow"></span>
+                        <span class="arc-beam"></span>
+                        <span class="spark spark-one"></span>
+                        <span class="spark spark-two"></span>
+                        <span class="spark spark-three"></span>
+                        <div class="status-card status-card-primary">
+                            <small>Mobile Welding Unit</small>
+                            <strong>Ready for Dispatch</strong>
+                        </div>
+                        <div class="status-card status-card-secondary">
+                            <small>Service Area</small>
+                            <strong>Calgary &amp; Area</strong>
+                        </div>
+                        <div class="status-card status-card-tertiary">
+                            <small>Established</small>
+                            <strong>Since 1985</strong>
+                        </div>
+                        <div class="visual-core">
+                            <strong>Field Welding System</strong>
+                            <small>Portable welding, pipe, structural, and fabrication support</small>
+                        </div>
+                    </div>
+                    <div class="frame-metrics">
+                        <span>Portable</span>
+                        <span>Pressure Pipe</span>
+                        <span>Structural</span>
+                    </div>
+                </div>
             </div>
-            <div class="visual-core">
-              <strong>Field Welding System</strong>
-              <small>Portable welding, pipe, structural, and fabrication support</small>
+        </section>
+
+        <section class="trust-stats reveal-stagger" aria-label="Trust stats">
+            <div class="stat reveal reveal-up">
+                <strong class="stat-value-mask" data-stat-value="1985">1985</strong>
+                <span>Serving Calgary since</span>
             </div>
-          </div>
-          <div class="frame-metrics">
-            <span>Portable</span>
-            <span>Pressure Pipe</span>
-            <span>Structural</span>
-          </div>
+            <div class="stat reveal reveal-up">
+                <strong class="stat-value-mask" data-stat-value="24 HR">24 HR</strong>
+                <span>Answering service</span>
+            </div>
+            <div class="stat reveal reveal-up">
+                <strong class="stat-value-mask" data-stat-value="13">13</strong>
+                <span>Core welding capabilities</span>
+            </div>
+            <div class="stat reveal reveal-up">
+                <strong class="stat-value-mask" data-stat-value="LOCAL">LOCAL</strong>
+                <span>Calgary owned service area</span>
+            </div>
+        </section>
+
+        <section class="section services-section" id="services">
+            <div class="section-heading reveal reveal-up">
+                <p class="eyebrow">Services &amp; capabilities</p>
+                <h2>Field-ready welding capabilities</h2>
+                <p>Portable welding, pressure pipe work, structural repairs, fabrication, and specialty materials
+                    handled with practical job-site experience.</p>
+            </div>
+
+            <div class="card-grid services-grid reveal-stagger">
+                <article class="service-card reveal reveal-up trace-border interactive-card">
+                    <span>01</span>
+                    <h3>Portable welding</h3>
+                    <p>On-site welding support for repairs, modifications, and field fabrication.</p>
+                </article>
+                <article class="service-card reveal reveal-up trace-border interactive-card">
+                    <span>02</span>
+                    <h3>Pressure pipe</h3>
+                    <p>Pressure pipe welding, pipe repair, gas piping, and water piping.</p>
+                </article>
+                <article class="service-card reveal reveal-up trace-border interactive-card">
+                    <span>03</span>
+                    <h3>Structural welding</h3>
+                    <p>Field welding for steel supports, frames, brackets, and assemblies.</p>
+                </article>
+                <article class="service-card reveal reveal-up trace-border interactive-card">
+                    <span>04</span>
+                    <h3>Custom fabrication</h3>
+                    <p>Custom metalwork for repairs, replacements, and built-to-fit parts.</p>
+                </article>
+                <article class="service-card reveal reveal-up trace-border interactive-card">
+                    <span>05</span>
+                    <h3>Architectural metal</h3>
+                    <p>Clean metal details, railings, panels, and custom finish work.</p>
+                </article>
+                <article class="service-card reveal reveal-up trace-border interactive-card">
+                    <span>06</span>
+                    <h3>Specialty materials</h3>
+                    <p>Aluminum, stainless steel, cast iron, and titanium welding support.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="section about-section" id="about">
+            <div class="about-copy reveal reveal-left">
+                <p class="eyebrow">About Big Blue</p>
+                <h2>Calgary field welding since 1985</h2>
+                <p>Big Blue Portable Welding (1985) Ltd. serves Calgary and the surrounding area with professional
+                    welding, clear communication, and dependable field service.</p>
+                <p>The company supports pressure pipe work, structural welding, pipe repair, custom fabrication,
+                    architectural metalwork, and specialty materials from a Calgary base.</p>
+            </div>
+            <div class="about-panel reveal reveal-right">
+                <h3>Business details</h3>
+                <dl>
+                    <div>
+                        <dt>Location</dt>
+                        <dd>Calgary, Alberta</dd>
+                    </div>
+                    <div>
+                        <dt>Hours</dt>
+                        <dd>Monday to Friday, 7:00AM to 5:00PM</dd>
+                    </div>
+                    <div>
+                        <dt>Answering</dt>
+                        <dd>24-hour answering service</dd>
+                    </div>
+                    <div>
+                        <dt>Service area</dt>
+                        <dd>Calgary and surrounding area</dd>
+                    </div>
+                </dl>
+            </div>
+        </section>
+
+        <section class="section equipment-section" id="equipment">
+            <div class="industrial-frame reveal reveal-left trace-border">
+                <div class="frame-topline">
+                    <span>Truck-mounted equipment</span>
+                    <span>Field ready</span>
+                </div>
+                <div class="placeholder-visual equipment-visual" role="img"
+                    aria-label="Truck-mounted welding equipment placeholder">
+                    <span class="weld-glow"></span>
+                    <strong>Truck-Mounted Welding Equipment</strong>
+                    <small>Mobile capacity for job-site welding work</small>
+                </div>
+            </div>
+            <div class="equipment-copy reveal reveal-right">
+                <p class="eyebrow">Truck-mounted equipment</p>
+                <h2>Built for work on site</h2>
+                <p>Field welding depends on practical equipment, organized trucks, and a service model built around
+                    access, timing, and job-site conditions.</p>
+                <ul class="check-list">
+                    <li>On-site welding and repairs</li>
+                    <li>Pipe, structural, fabrication, and metalwork support</li>
+                    <li>Service across Calgary and surrounding areas</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="section process-section" id="process">
+            <div class="section-heading reveal reveal-up">
+                <p class="eyebrow">Process</p>
+                <h2>From call to completed weld</h2>
+            </div>
+            <div class="process-grid reveal-stagger">
+                <article class="process-step reveal reveal-up">
+                    <span>1</span>
+                    <h3>Send the job details</h3>
+                    <p>Share the site, material, timing, and access requirements.</p>
+                </article>
+                <article class="process-step reveal reveal-up">
+                    <span>2</span>
+                    <h3>Confirm the scope</h3>
+                    <p>Big Blue reviews the welding need and confirms the approach.</p>
+                </article>
+                <article class="process-step reveal reveal-up">
+                    <span>3</span>
+                    <h3>Complete the work</h3>
+                    <p>A mobile welding setup arrives prepared for the job-site requirements.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="section materials-section" id="materials">
+            <div class="section-heading reveal reveal-up">
+                <p class="eyebrow">Materials</p>
+                <h2>Common and specialty metals</h2>
+                <p>Support for repair and fabrication work involving multiple material types.</p>
+            </div>
+            <div class="materials-list reveal reveal-up reveal-stagger" aria-label="Materials">
+                <span>Steel</span>
+                <span>Aluminum</span>
+                <span>Stainless Steel</span>
+                <span>Cast Iron</span>
+                <span>Titanium</span>
+                <span>Architectural Metal</span>
+            </div>
+        </section>
+
+        <section class="section projects-section" id="projects">
+            <div class="section-heading reveal reveal-up">
+                <p class="eyebrow">Common jobs</p>
+                <h2>Typical field welding work</h2>
+            </div>
+            <div class="project-grid reveal-stagger">
+                <article class="project-card reveal reveal-up trace-border interactive-card">
+                    <div class="project-image placeholder-visual" role="img"
+                        aria-label="Pipe repair project placeholder">
+                        <span class="weld-glow"></span>
+                        <strong>Pipe Repair Image</strong>
+                    </div>
+                    <h3>Pipe repair</h3>
+                    <p>Pressure pipe welding, gas piping, water piping, and field repair.</p>
+                </article>
+                <article class="project-card reveal reveal-up trace-border interactive-card">
+                    <div class="project-image placeholder-visual" role="img"
+                        aria-label="Structural welding project placeholder">
+                        <span class="weld-glow"></span>
+                        <strong>Structural Welding Image</strong>
+                    </div>
+                    <h3>Structural welding</h3>
+                    <p>Frames, supports, braces, brackets, and steel assemblies.</p>
+                </article>
+                <article class="project-card reveal reveal-up trace-border interactive-card">
+                    <div class="project-image placeholder-visual" role="img"
+                        aria-label="Custom fabrication project placeholder">
+                        <span class="weld-glow"></span>
+                        <strong>Fabrication Image</strong>
+                    </div>
+                    <h3>Custom fabrication</h3>
+                    <p>Built-to-fit components, repairs, replacements, and modifications.</p>
+                </article>
+            </div>
+        </section>
+
+        <section class="section service-area" id="area">
+            <div class="service-map-frame">
+                <div class="service-map-card">
+                    <div id="service-map" class="map-container"></div>
+                    <div class="service-map-overlay"></div>
+                </div>
+                <div class="corner-bracket top-left"></div>
+                <div class="corner-bracket top-right"></div>
+                <div class="corner-bracket bottom-left"></div>
+                <div class="corner-bracket bottom-right"></div>
+            </div>
+            <div class="area-copy reveal reveal-right">
+                <p class="eyebrow">Service area</p>
+                <h2>Calgary and surrounding area</h2>
+                <p>Based at 5-2815 17 St SW in Calgary, Big Blue Portable Welding supports mobile welding needs across
+                    Calgary and nearby communities.</p>
+                <div class="area-tags">
+                    <span>Calgary</span>
+                    <span>Surrounding Area</span>
+                    <span>Job-Site Welding</span>
+                    <span>Mobile Repairs</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="section quote-section" id="quote">
+            <div class="quote-copy reveal reveal-left">
+                <p class="eyebrow">Request a quote</p>
+                <h2>Start with the job details</h2>
+                <p>Call during business hours for the fastest response, or send the basics and Big Blue will follow up
+                    shortly.</p>
+                <div class="contact-strip">
+                    <a href="tel:4032950909">Phone: 403-295-0909</a>
+                    <a href="mailto:bigbluewelding@gmail.com">bigbluewelding@gmail.com</a>
+                </div>
+            </div>
+
+            <form class="quote-form reveal reveal-right trace-border" action="https://api.web3forms.com/submit"
+                method="POST" data-quote-form>
+                <input type="hidden" name="access_key" value="587d54eb-d44f-4ca7-af84-828c59df83cc">
+                <input type="hidden" name="subject" value="New Quote Request - Big Blue Welding">
+                <input type="hidden" name="from_name" value="Big Blue Welding Website">
+                <input type="checkbox" name="botcheck" style="display:none;" tabindex="-1" aria-hidden="true">
+
+                <label for="quote-name">
+                    Name *
+                    <input id="quote-name" type="text" name="name" autocomplete="name" required>
+                </label>
+                <label for="quote-phone">
+                    Phone *
+                    <input id="quote-phone" type="tel" name="phone" autocomplete="tel" required>
+                </label>
+                <label for="quote-email">
+                    Email *
+                    <input id="quote-email" type="email" name="email" autocomplete="email" required>
+                </label>
+                <label for="quote-service">
+                    Service needed *
+                    <select id="quote-service" name="service_needed" required>
+                        <option value="">Select a service</option>
+                        <option>Portable Welding</option>
+                        <option>Pressure Pipe Welding</option>
+                        <option>Structural Welding</option>
+                        <option>Pipe Repair</option>
+                        <option>Custom Fabrication</option>
+                        <option>Architectural Metalwork</option>
+                        <option>Specialty Material Welding</option>
+                    </select>
+                </label>
+                <label for="quote-location" class="full">
+                    Project location
+                    <input id="quote-location" type="text" name="project_location" autocomplete="street-address"
+                        placeholder="Calgary, surrounding area, or job-site address">
+                </label>
+                <label for="quote-message" class="full">
+                    Project details *
+                    <textarea id="quote-message" name="message" rows="5"
+                        placeholder="Tell us about the material, location, timing, and site access."
+                        required></textarea>
+                </label>
+                <p class="form-helper full">This sends your quote request directly to Big Blue. For urgent work, call
+                    403-295-0909.</p>
+                <button class="btn btn-primary full" type="submit">Send Quote Request</button>
+                <p class="form-status" role="status" aria-live="polite" data-form-status></p>
+                <noscript>
+                    <p class="form-status full">JavaScript is off. This form can still submit through Web3Forms, or you
+                        can email bigbluewelding@gmail.com directly.</p>
+                </noscript>
+            </form>
+        </section>
+
+        <section class="final-cta reveal reveal-up">
+            <div class="cta-spark-field" data-spark-field aria-hidden="true"></div>
+            <p class="eyebrow">Need portable welding?</p>
+            <h2>Call Big Blue today</h2>
+            <p>Professional mobile welding, pressure pipe welding, structural welding, pipe repair, and custom
+                fabrication in Calgary since 1985.</p>
+            <div class="hero-actions">
+                <a class="btn btn-primary" href="tel:4032950909">Call 403-295-0909</a>
+                <a class="btn btn-secondary" href="mailto:bigbluewelding@gmail.com">Email Big Blue</a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-brand">
+            <strong>Big Blue Portable Welding (1985) Ltd.</strong>
+            <span>Professional portable welding in Calgary and surrounding areas since 1985.</span>
         </div>
-      </div>
-    </section>
+        <address>
+            <span>5-2815 17 St SW, Calgary, AB, T2T 6T5</span>
+            <a href="tel:4032950909">Phone: 403-295-0909</a>
+            <span>Fax: 403-295-0989</span>
+            <a href="mailto:bigbluewelding@gmail.com">bigbluewelding@gmail.com</a>
+            <span>Monday to Friday, 7:00AM to 5:00PM</span>
+            <span>24-hour answering service</span>
+        </address>
+    </footer>
 
-    <section class="trust-stats reveal-stagger" aria-label="Trust stats">
-      <div class="stat reveal reveal-up">
-        <strong class="stat-value-mask" data-stat-value="1985">1985</strong>
-        <span>Serving Calgary since</span>
-      </div>
-      <div class="stat reveal reveal-up">
-        <strong class="stat-value-mask" data-stat-value="24 HR">24 HR</strong>
-        <span>Answering service</span>
-      </div>
-      <div class="stat reveal reveal-up">
-        <strong class="stat-value-mask" data-stat-value="13">13</strong>
-        <span>Core welding capabilities</span>
-      </div>
-      <div class="stat reveal reveal-up">
-        <strong class="stat-value-mask" data-stat-value="LOCAL">LOCAL</strong>
-        <span>Calgary owned service area</span>
-      </div>
-    </section>
+    <a class="mobile-call" href="tel:4032950909" aria-label="Call Big Blue Portable Welding">Call 403-295-0909</a>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const mapElement = document.getElementById('service-map');
+            if (!mapElement) return;
 
-    <section class="section services-section" id="services">
-      <div class="section-heading reveal reveal-up">
-        <p class="eyebrow">Services &amp; capabilities</p>
-        <h2>Field-ready welding capabilities</h2>
-        <p>Portable welding, pressure pipe work, structural repairs, fabrication, and specialty materials handled with practical job-site experience.</p>
-      </div>
+            const originCoords = [50.9800, -113.9800];
+            const calgaryCoords = [51.0447, -114.0719];
+            const regionalCenterCoords = [51.0000, -114.1500];
 
-      <div class="card-grid services-grid reveal-stagger">
-        <article class="service-card reveal reveal-up trace-border interactive-card">
-          <span>01</span>
-          <h3>Portable welding</h3>
-          <p>On-site welding support for repairs, modifications, and field fabrication.</p>
-        </article>
-        <article class="service-card reveal reveal-up trace-border interactive-card">
-          <span>02</span>
-          <h3>Pressure pipe</h3>
-          <p>Pressure pipe welding, pipe repair, gas piping, and water piping.</p>
-        </article>
-        <article class="service-card reveal reveal-up trace-border interactive-card">
-          <span>03</span>
-          <h3>Structural welding</h3>
-          <p>Field welding for steel supports, frames, brackets, and assemblies.</p>
-        </article>
-        <article class="service-card reveal reveal-up trace-border interactive-card">
-          <span>04</span>
-          <h3>Custom fabrication</h3>
-          <p>Custom metalwork for repairs, replacements, and built-to-fit parts.</p>
-        </article>
-        <article class="service-card reveal reveal-up trace-border interactive-card">
-          <span>05</span>
-          <h3>Architectural metal</h3>
-          <p>Clean metal details, railings, panels, and custom finish work.</p>
-        </article>
-        <article class="service-card reveal reveal-up trace-border interactive-card">
-          <span>06</span>
-          <h3>Specialty materials</h3>
-          <p>Aluminum, stainless steel, cast iron, and titanium welding support.</p>
-        </article>
-      </div>
-    </section>
+            const surroundingCities = [
+                { name: "Chestermere", coords: [51.0500, -113.8225], pos: "pos-right" },
+                { name: "Airdrie", coords: [51.2917, -114.0144], pos: "pos-top" },
+                { name: "Cochrane", coords: [51.1890, -114.4667], pos: "pos-left" },
+                { name: "Okotoks", coords: [50.7258, -113.9748], pos: "pos-bottom" }
+            ];
 
-    <section class="section about-section" id="about">
-      <div class="about-copy reveal reveal-left">
-        <p class="eyebrow">About Big Blue</p>
-        <h2>Calgary field welding since 1985</h2>
-        <p>Big Blue Portable Welding (1985) Ltd. serves Calgary and the surrounding area with professional welding, clear communication, and dependable field service.</p>
-        <p>The company supports pressure pipe work, structural welding, pipe repair, custom fabrication, architectural metalwork, and specialty materials from a Calgary base.</p>
-      </div>
-      <div class="about-panel reveal reveal-right">
-        <h3>Business details</h3>
-        <dl>
-          <div>
-            <dt>Location</dt>
-            <dd>Calgary, Alberta</dd>
-          </div>
-          <div>
-            <dt>Hours</dt>
-            <dd>Monday to Friday, 7:00AM to 5:00PM</dd>
-          </div>
-          <div>
-            <dt>Answering</dt>
-            <dd>24-hour answering service</dd>
-          </div>
-          <div>
-            <dt>Service area</dt>
-            <dd>Calgary and surrounding area</dd>
-          </div>
-        </dl>
-      </div>
-    </section>
+            const map = L.map('service-map', { center: originCoords, zoom: 15, zoomControl: false, scrollWheelZoom: false, attributionControl: false });
+            L.control.zoom({ position: 'topright' }).addTo(map);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/dark_nolabels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19 }).addTo(map);
 
-    <section class="section equipment-section" id="equipment">
-      <div class="industrial-frame reveal reveal-left trace-border">
-        <div class="frame-topline">
-          <span>Truck-mounted equipment</span>
-          <span>Field ready</span>
-        </div>
-        <div class="placeholder-visual equipment-visual" role="img" aria-label="Truck-mounted welding equipment placeholder">
-          <span class="weld-glow"></span>
-          <strong>Truck-Mounted Welding Equipment</strong>
-          <small>Mobile capacity for job-site welding work</small>
-        </div>
-      </div>
-      <div class="equipment-copy reveal reveal-right">
-        <p class="eyebrow">Truck-mounted equipment</p>
-        <h2>Built for work on site</h2>
-        <p>Field welding depends on practical equipment, organized trucks, and a service model built around access, timing, and job-site conditions.</p>
-        <ul class="check-list">
-          <li>On-site welding and repairs</li>
-          <li>Pipe, structural, fabrication, and metalwork support</li>
-          <li>Service across Calgary and surrounding areas</li>
-        </ul>
-      </div>
-    </section>
+            const hubIcon = L.divIcon({ className: 'pin-wrapper', html: '<div class="hub-dot"></div><div class="map-label calgary-label">CALGARY</div>', iconSize: [20, 20], iconAnchor: [10, 10] });
+            const hubMarker = L.marker(calgaryCoords, { icon: hubIcon, opacity: 0 }).addTo(map);
 
-    <section class="section process-section" id="process">
-      <div class="section-heading reveal reveal-up">
-        <p class="eyebrow">Process</p>
-        <h2>From call to completed weld</h2>
-      </div>
-      <div class="process-grid reveal-stagger">
-        <article class="process-step reveal reveal-up">
-          <span>1</span>
-          <h3>Send the job details</h3>
-          <p>Share the site, material, timing, and access requirements.</p>
-        </article>
-        <article class="process-step reveal reveal-up">
-          <span>2</span>
-          <h3>Confirm the scope</h3>
-          <p>Big Blue reviews the welding need and confirms the approach.</p>
-        </article>
-        <article class="process-step reveal reveal-up">
-          <span>3</span>
-          <h3>Complete the work</h3>
-          <p>A mobile welding setup arrives prepared for the job-site requirements.</p>
-        </article>
-      </div>
-    </section>
+            const cityMarkers = [];
+            surroundingCities.forEach(city => {
+                const randomDelay = (Math.random() * 2).toFixed(2);
+                const icon = L.divIcon({ className: 'pin-wrapper', html: `<div class="beacon-dot" style="--delay: ${randomDelay}"></div><div class="map-label ${city.pos}">${city.name}</div>`, iconSize: [16, 16], iconAnchor: [8, 8] });
+                cityMarkers.push(L.marker(city.coords, { icon: icon }).addTo(map));
+            });
 
-    <section class="section materials-section" id="materials">
-      <div class="section-heading reveal reveal-up">
-        <p class="eyebrow">Materials</p>
-        <h2>Common and specialty metals</h2>
-        <p>Support for repair and fabrication work involving multiple material types.</p>
-      </div>
-      <div class="materials-list reveal reveal-up reveal-stagger" aria-label="Materials">
-        <span>Steel</span>
-        <span>Aluminum</span>
-        <span>Stainless Steel</span>
-        <span>Cast Iron</span>
-        <span>Titanium</span>
-        <span>Architectural Metal</span>
-      </div>
-    </section>
+            const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            let isPlaying = false;
 
-    <section class="section projects-section" id="projects">
-      <div class="section-heading reveal reveal-up">
-        <p class="eyebrow">Common jobs</p>
-        <h2>Typical field welding work</h2>
-      </div>
-      <div class="project-grid reveal-stagger">
-        <article class="project-card reveal reveal-up trace-border interactive-card">
-          <div class="project-image placeholder-visual" role="img" aria-label="Pipe repair project placeholder">
-            <span class="weld-glow"></span>
-            <strong>Pipe Repair Image</strong>
-          </div>
-          <h3>Pipe repair</h3>
-          <p>Pressure pipe welding, gas piping, water piping, and field repair.</p>
-        </article>
-        <article class="project-card reveal reveal-up trace-border interactive-card">
-          <div class="project-image placeholder-visual" role="img" aria-label="Structural welding project placeholder">
-            <span class="weld-glow"></span>
-            <strong>Structural Welding Image</strong>
-          </div>
-          <h3>Structural welding</h3>
-          <p>Frames, supports, braces, brackets, and steel assemblies.</p>
-        </article>
-        <article class="project-card reveal reveal-up trace-border interactive-card">
-          <div class="project-image placeholder-visual" role="img" aria-label="Custom fabrication project placeholder">
-            <span class="weld-glow"></span>
-            <strong>Fabrication Image</strong>
-          </div>
-          <h3>Custom fabrication</h3>
-          <p>Built-to-fit components, repairs, replacements, and modifications.</p>
-        </article>
-      </div>
-    </section>
+            const runCinematicSequence = async () => {
+                if (isPlaying) return;
+                isPlaying = true;
 
-    <section class="section service-area" id="area">
-      <div class="area-map reveal reveal-left" aria-hidden="true">
-        <div class="map-grid">
-          <span>Calgary</span>
-        </div>
-      </div>
-      <div class="area-copy reveal reveal-right">
-        <p class="eyebrow">Service area</p>
-        <h2>Calgary and surrounding area</h2>
-        <p>Based at 5-2815 17 St SW in Calgary, Big Blue Portable Welding supports mobile welding needs across Calgary and nearby communities.</p>
-        <div class="area-tags">
-          <span>Calgary</span>
-          <span>Surrounding Area</span>
-          <span>Job-Site Welding</span>
-          <span>Mobile Repairs</span>
-        </div>
-      </div>
-    </section>
+                if (prefersReducedMotion) {
+                    map.setView(regionalCenterCoords, 9.0);
+                    hubMarker.setOpacity(1); document.querySelector('.calgary-label').classList.add('visible');
+                    cityMarkers.forEach(m => { const el = m.getElement(); el.querySelector('.beacon-dot').classList.add('visible'); el.querySelector('.map-label').classList.add('visible'); });
+                    return;
+                }
 
-    <section class="section quote-section" id="quote">
-      <div class="quote-copy reveal reveal-left">
-        <p class="eyebrow">Request a quote</p>
-        <h2>Start with the job details</h2>
-        <p>Call during business hours for the fastest response, or send the basics and open an email draft with your project details.</p>
-        <div class="contact-strip">
-          <a href="tel:4032950909">Phone: 403-295-0909</a>
-          <a href="mailto:bigbluewelding@gmail.com">bigbluewelding@gmail.com</a>
-        </div>
-      </div>
+                while (true) {
+                    await sleep(1000);
 
-      <form class="quote-form reveal reveal-right trace-border" data-quote-form>
-        <label>
-          Name
-          <input type="text" name="name" autocomplete="name" required>
-        </label>
-        <label>
-          Phone
-          <input type="tel" name="phone" autocomplete="tel" required>
-        </label>
-        <label>
-          Email
-          <input type="email" name="email" autocomplete="email">
-        </label>
-        <label>
-          Service needed
-          <select name="service" required>
-            <option value="">Select a service</option>
-            <option>Portable welding</option>
-            <option>Pressure pipe welding</option>
-            <option>Structural welding</option>
-            <option>Pipe repair</option>
-            <option>Custom fabrication</option>
-            <option>Architectural metalwork</option>
-            <option>Specialty material welding</option>
-          </select>
-        </label>
-        <label class="full">
-          Project details
-          <textarea name="message" rows="5" placeholder="Tell us about the material, location, timing, and site access." required></textarea>
-        </label>
-        <button class="btn btn-primary full" type="submit">Email Quote Request</button>
-        <p class="form-status" role="status" data-form-status></p>
-      </form>
-    </section>
+                    map.flyTo(calgaryCoords, 11, { duration: 6, easeLinearity: 0.25 });
+                    await sleep(5500);
 
-    <section class="final-cta reveal reveal-up">
-      <div class="cta-spark-field" data-spark-field aria-hidden="true"></div>
-      <p class="eyebrow">Need portable welding?</p>
-      <h2>Call Big Blue today</h2>
-      <p>Professional mobile welding, pressure pipe welding, structural welding, pipe repair, and custom fabrication in Calgary since 1985.</p>
-      <div class="hero-actions">
-        <a class="btn btn-primary" href="tel:4032950909">Call 403-295-0909</a>
-        <a class="btn btn-secondary" href="mailto:bigbluewelding@gmail.com">Email Big Blue</a>
-      </div>
-    </section>
-  </main>
+                    hubMarker.setOpacity(1); document.querySelector('.calgary-label').classList.add('visible');
+                    await sleep(500);
 
-  <footer class="site-footer">
-    <div class="footer-brand">
-      <strong>Big Blue Portable Welding (1985) Ltd.</strong>
-      <span>Professional portable welding in Calgary and surrounding areas since 1985.</span>
-    </div>
-    <address>
-      <span>5-2815 17 St SW, Calgary, AB, T2T 6T5</span>
-      <a href="tel:4032950909">Phone: 403-295-0909</a>
-      <span>Fax: 403-295-0989</span>
-      <a href="mailto:bigbluewelding@gmail.com">bigbluewelding@gmail.com</a>
-      <span>Monday to Friday, 7:00AM to 5:00PM</span>
-      <span>24-hour answering service</span>
-    </address>
-  </footer>
+                    await sleep(2000);
 
-  <a class="mobile-call" href="tel:4032950909" aria-label="Call Big Blue Portable Welding">Call 403-295-0909</a>
-  <script src="script.js"></script>
+                    map.flyTo(regionalCenterCoords, 8.5, { duration: 4.5, easeLinearity: 0.25 });
+                    await sleep(3500);
+
+                    for (let i = 0; i < cityMarkers.length; i++) {
+                        const el = cityMarkers[i].getElement();
+                        if (el) { el.querySelector('.beacon-dot').classList.add('visible'); el.querySelector('.map-label').classList.add('visible'); }
+                        await sleep(1000);
+                    }
+
+                    await sleep(10000);
+
+                    document.querySelector('.calgary-label').classList.remove('visible'); hubMarker.setOpacity(0);
+                    cityMarkers.forEach(m => { const el = m.getElement(); if (el) { el.querySelector('.beacon-dot').classList.remove('visible'); el.querySelector('.map-label').classList.remove('visible'); } });
+
+                    await sleep(2500);
+                    map.flyTo(originCoords, 15, { duration: 4, easeLinearity: 0.25 });
+
+                    await sleep(4500);
+                }
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) { runCinematicSequence(); observer.disconnect(); }
+            }, { threshold: 0.1 });
+            observer.observe(mapElement);
+        });
+    </script>
+    <script src="script.js"></script>
 </body>
+
 </html>

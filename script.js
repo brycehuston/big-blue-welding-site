@@ -213,8 +213,8 @@ const createAmbientSparks = () => {
 
   fields.forEach((field, fieldIndex) => {
     const count = field.classList.contains("cta-spark-field")
-      ? 10
-      : (isSmallScreen ? 8 : 20);
+      ? 7
+      : (isSmallScreen ? 5 : 14);
 
     for (let index = 0; index < count; index += 1) {
       const spark = document.createElement("span");
@@ -226,11 +226,11 @@ const createAmbientSparks = () => {
       const y = field.classList.contains("cta-spark-field")
         ? 20 + Math.random() * 70
         : 10 + Math.random() * 86;
-      const drift = (Math.random() > 0.5 ? 1 : -1) * (18 + Math.random() * 60);
-      const duration = 5200 + Math.random() * 4600;
+      const drift = (Math.random() > 0.5 ? 1 : -1) * (12 + Math.random() * 46);
+      const duration = 7200 + Math.random() * 6200;
       const delay = -(Math.random() * duration) - (fieldIndex * 600);
-      const size = 1.5 + Math.random() * 2.2;
-      const height = 7 + Math.random() * 18;
+      const size = 1.2 + Math.random() * 1.8;
+      const height = 6 + Math.random() * 16;
 
       spark.style.setProperty("--spark-x", `${x.toFixed(2)}%`);
       spark.style.setProperty("--spark-y", `${y.toFixed(2)}%`);
@@ -250,29 +250,48 @@ createAmbientSparks();
 quoteForm?.addEventListener("submit", (event) => {
   event.preventDefault();
 
+  const submitButton = quoteForm.querySelector("button[type='submit']");
+  const originalButtonText = submitButton?.textContent || "Send Quote Request";
   const formData = new FormData(quoteForm);
-  const name = String(formData.get("name") || "").trim();
-  const phone = String(formData.get("phone") || "").trim();
-  const email = String(formData.get("email") || "").trim();
-  const service = String(formData.get("service") || "").trim();
-  const message = String(formData.get("message") || "").trim();
-
-  const subject = encodeURIComponent(`Quote request from ${name || "website visitor"}`);
-  const body = encodeURIComponent([
-    "Big Blue Portable Welding quote request",
-    "",
-    `Name: ${name}`,
-    `Phone: ${phone}`,
-    `Email: ${email || "Not provided"}`,
-    `Service: ${service}`,
-    "",
-    "Project details:",
-    message
-  ].join("\n"));
-
-  window.location.href = `mailto:bigbluewelding@gmail.com?subject=${subject}&body=${body}`;
 
   if (formStatus) {
-    formStatus.textContent = "Opening your email app with the quote request details.";
+    formStatus.textContent = "";
   }
+
+  if (submitButton) {
+    submitButton.disabled = true;
+    submitButton.textContent = "Sending...";
+  }
+
+  fetch(quoteForm.action, {
+    method: "POST",
+    body: formData,
+    headers: {
+      Accept: "application/json"
+    }
+  })
+    .then(async (response) => {
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok || result.success === false) {
+        throw new Error(result.message || "Quote request failed.");
+      }
+
+      quoteForm.reset();
+
+      if (formStatus) {
+        formStatus.textContent = "Thanks. Your quote request has been sent. Big Blue will follow up shortly.";
+      }
+    })
+    .catch(() => {
+      if (formStatus) {
+        formStatus.textContent = "Something went wrong. Please call 403-295-0909 or email bigbluewelding@gmail.com.";
+      }
+    })
+    .finally(() => {
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = originalButtonText;
+      }
+    });
 });

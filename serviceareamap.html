@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Big Blue Welding - Master Cinematic Map</title>
+  
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@800&display=swap" rel="stylesheet">
+
+  <style>
+    body, html {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      background-color: #0b0d10; 
+      font-family: 'Inter', sans-serif;
+      overflow: hidden; 
+    }
+
+    #service-map { width: 100vw; height: 100vh; background: #0b0d10; z-index: 1; }
+    .leaflet-container { background: #0b0d10 !important; }
+
+    .service-map-overlay {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.95); 
+      z-index: 999;
+    }
+
+    .leaflet-control-attribution { display: none !important; }
+    
+    .leaflet-control-zoom {
+      border: none !important;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5) !important;
+      margin-top: 20px !important; margin-right: 20px !important;
+    }
+    .leaflet-control-zoom a {
+      background: #1a1e24 !important; color: #e63d3d !important;
+      border-bottom: 1px solid #2a3038 !important;
+    }
+
+    .pin-wrapper { display: flex; align-items: center; justify-content: center; }
+
+    /* Calgary Center Point */
+    .hub-dot {
+      width: 14px; height: 14px;
+      background-color: #e63d3d; 
+      border-radius: 50%;
+      box-shadow: 0 0 15px 5px rgba(230, 61, 61, 0.6);
+      animation: pulse-hub-plasma 3s infinite cubic-bezier(0.22, 1, 0.36, 1);
+      /* Slow 4s transition for ghosting */
+      transition: opacity 4s ease-in-out; 
+    }
+
+    /* Satellite Cities */
+    .beacon-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      opacity: 0; transform: scale(0.5);
+      /* Slow 4s transition for ghosting */
+      transition: opacity 4s ease-in-out, transform 4s ease-in-out;
+    }
+
+    .beacon-dot.visible { 
+      opacity: 1; 
+      transform: scale(1); 
+      animation: soft-breathe 4s infinite alternate ease-in-out; 
+    }
+
+    @keyframes soft-breathe {
+      0% { background-color: #ba2d2b; box-shadow: 0 0 8px 1px rgba(230, 61, 61, 0.4); }
+      100% { background-color: #ff5c5c; box-shadow: 0 0 14px 4px rgba(230, 61, 61, 0.8); }
+    }
+
+    @keyframes pulse-hub-plasma {
+      0% { transform: scale(0.9); box-shadow: 0 0 10px 2px rgba(230, 61, 61, 0.4); }
+      50% { transform: scale(1.2); box-shadow: 0 0 25px 12px rgba(230, 61, 61, 0.8); }
+      100% { transform: scale(0.9); box-shadow: 0 0 10px 2px rgba(230, 61, 61, 0.4); }
+    }
+
+    .map-label {
+      position: absolute;
+      background: rgba(18, 21, 26, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #e0e6ed; font-size: 10px; font-weight: 800;
+      padding: 3px 6px; border-radius: 3px;
+      opacity: 0;
+      transition: opacity 4s ease-in-out;
+      white-space: nowrap;
+    }
+    
+    .map-label.visible { opacity: 1; }
+
+    /* Label Offsets */
+    .pos-right { left: 18px; top: -8px; }
+    .pos-left { right: 18px; top: -8px; }
+    .pos-top { bottom: 12px; left: -50%; transform: translateX(-20%); }
+    .pos-bottom { top: 12px; left: -50%; transform: translateX(-20%); }
+    .calgary-label { top: 22px; left: 50%; transform: translateX(-50%); }
+  </style>
+</head>
+<body>
+
+  <div id="service-map"></div>
+  <div class="service-map-overlay"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const mapElement = document.getElementById('service-map');
+      if (!mapElement) return;
+
+      const originCoords = [50.9800, -113.9800]; 
+      const calgaryCoords = [51.0447, -114.0719];
+      const regionalCenterCoords = [51.0000, -114.1500];
+
+      const surroundingCities = [
+        { name: "Chestermere", coords: [51.0500, -113.8225], pos: "pos-right" },
+        { name: "Airdrie", coords: [51.2917, -114.0144], pos: "pos-top" },
+        { name: "Cochrane", coords: [51.1890, -114.4667], pos: "pos-left" },
+        { name: "Okotoks", coords: [50.7258, -113.9748], pos: "pos-bottom" }
+      ];
+
+      const map = L.map('service-map', {
+        center: originCoords, zoom: 15,
+        zoomControl: false, scrollWheelZoom: false, attributionControl: false, zoomSnap: 0.1 
+      });
+
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/dark_nolabels/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19 }).addTo(map);
+
+      const hubIcon = L.divIcon({ className: 'pin-wrapper', html: '<div class="hub-dot"></div><div class="map-label calgary-label">CALGARY</div>', iconSize: [20, 20], iconAnchor: [10, 10] });
+      const hubMarker = L.marker(calgaryCoords, { icon: hubIcon, opacity: 0 }).addTo(map);
+
+      const cityMarkers = [];
+      surroundingCities.forEach(city => {
+        const icon = L.divIcon({ className: 'pin-wrapper', html: `<div class="beacon-dot"></div><div class="map-label ${city.pos}">${city.name}</div>`, iconSize: [16, 16], iconAnchor: [8, 8] });
+        cityMarkers.push(L.marker(city.coords, { icon: icon }).addTo(map));
+      });
+
+      const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+      let isPlaying = false;
+
+      const runCinematicSequence = async () => {
+        if (isPlaying) return;
+        isPlaying = true;
+
+        while (true) {
+            await sleep(1500);
+
+            // STAGE 1: Zoom to Calgary (Ease out for smoothness)
+            map.flyTo(calgaryCoords, 11, { duration: 6, easeLinearity: 0.1 });
+            await sleep(5500); 
+            hubMarker.setOpacity(1);
+            document.querySelector('.calgary-label').classList.add('visible');
+            
+            // --- TWEAKABLE: Hold on Calgary ---
+            await sleep(7000);
+
+            // STAGE 2: Zoom to Region
+            map.flyTo(regionalCenterCoords, 8.5, { duration: 7, easeLinearity: 0.1 });
+            await sleep(6000); 
+            
+            // Cascade Reveal
+            for (let i = 0; i < cityMarkers.length; i++) {
+                const el = cityMarkers[i].getElement();
+                if (el) {
+                  el.querySelector('.beacon-dot').classList.add('visible');
+                  el.querySelector('.map-label').classList.add('visible');
+                }
+                await sleep(1200); 
+            }
+
+            // --- TWEAKABLE: Final Hold ---
+            await sleep(10000);
+
+            // STAGE 3: THE SMOOTH REVERSE FADE OUT
+            // Ghost away satellite cities first (Farthest to Closest)
+            for (let i = cityMarkers.length - 1; i >= 0; i--) {
+                const el = cityMarkers[i].getElement();
+                if (el) {
+                  el.querySelector('.beacon-dot').classList.remove('visible');
+                  el.querySelector('.map-label').classList.remove('visible');
+                }
+                await sleep(400); // Quick stagger for the fade-out
+            }
+
+            // Finally ghost away Calgary
+            await sleep(500);
+            document.querySelector('.calgary-label').classList.remove('visible');
+            hubMarker.setOpacity(0);
+
+            // Wait for 4s CSS transitions to fully finish
+            await sleep(6000); 
+            
+            // STAGE 4: Return Flight
+            map.flyTo(originCoords, 15, { duration: 7, easeLinearity: 0.1 });
+            await sleep(7500); 
+        }
+      };
+
+      const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) { runCinematicSequence(); observer.disconnect(); }
+      }, { threshold: 0.1 });
+      observer.observe(mapElement);
+    });
+  </script>
+</body>
+</html>
